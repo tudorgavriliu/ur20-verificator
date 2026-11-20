@@ -47,20 +47,52 @@
     return data;
   }
 
+  // Erori = blochează verificarea (mesaj roșu, aria-invalid).
+  function setFieldError(form, name, err) {
+    var box = form.querySelector('[data-field="' + name + '"]');
+    var msg = $('e-' + name);
+    if (msg) msg.textContent = err || '';
+    if (box) box.classList.toggle('has-error', !!err);
+    form.querySelectorAll('[name="' + name + '"]').forEach(function (inp) {
+      if (err) inp.setAttribute('aria-invalid', 'true'); else inp.removeAttribute('aria-invalid');
+    });
+  }
+
   function renderErrors(form, fields, errors) {
     var first = null;
     fields.forEach(function (name) {
-      var box = form.querySelector('[data-field="' + name + '"]');
-      var msg = $('e-' + name);
       var err = errors[name] || '';
-      if (msg) msg.textContent = err;
-      if (box) box.classList.toggle('has-error', !!err);
-      form.querySelectorAll('[name="' + name + '"]').forEach(function (inp) {
-        if (err) inp.setAttribute('aria-invalid', 'true'); else inp.removeAttribute('aria-invalid');
-      });
+      setFieldError(form, name, err);
       if (err && !first) first = form.querySelector('[name="' + name + '"]');
     });
     return first;
+  }
+
+  // Avertismente = NU blochează verificarea (mesaj galben lângă câmp).
+  function renderWarnings(form, warnings) {
+    LINE_FIELDS.forEach(function (name) {
+      var el = $('w-' + name);
+      if (!el) return;
+      var w = (warnings && warnings[name]) || '';
+      el.textContent = w;
+      var box = form.querySelector('[data-field="' + name + '"]');
+      if (box) box.classList.toggle('has-warning', !!w);
+    });
+  }
+
+  function updateSummary(form) {
+    var n = form.querySelectorAll('.has-error').length;
+    $('form-summary').textContent = n === 0 ? '' :
+      n === 1 ? 'Un câmp are nevoie de atenție.' : n + ' câmpuri au nevoie de atenție.';
+    return n;
+  }
+
+  function goToField(el, withFocus) {
+    if (!el) return;
+    try { el.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) { el.scrollIntoView(); }
+    if (withFocus) {
+      try { el.focus({ preventScroll: true }); } catch (e) { el.focus(); }
+    }
   }
 
   /* ---------- rezultat ---------- */
@@ -228,6 +260,7 @@
     $('f-line').reset();
     $('f-request').reset();
     renderErrors($('f-line'), LINE_FIELDS, {});
+    renderWarnings($('f-line'), {});
     renderErrors($('f-request'), CONTACT_FIELDS, {});
     $('form-summary').textContent = '';
     state.input = null; state.result = null;
@@ -239,28 +272,75 @@
     fillSelect($('judet'), C.judete);
 
     var fLine = $('f-line');
-    fLine.addEventListener('submit', function (ev) {
-      ev.preventDefault();
+
+    // Verifică formularul. Erorile opresc; avertismentele se afișează, dar evaluarea continuă.
+    function checkLine(withFocus) {
       var input = readForm(fLine, LINE_FIELDS);
       var v = U.validate(input);
       var first = renderErrors(fLine, LINE_FIELDS, v.errors);
+      renderWarnings(fLine, v.warnings);
       if (!v.ok) {
-        var n = Object.keys(v.errors).length;
-        $('form-summary').textContent = n === 1 ? 'Un câmp are nevoie de atenție.' : n + ' câmpuri au nevoie de atenție.';
+        updateSummary(fLine);
         if (v.errors.gripper) fLine.querySelector('details.assumptions').open = true;
-        if (first) first.focus();
-        return;
+        goToField(first, withFocus);
+        return false;
       }
       $('form-summary').textContent = '';
       state.input = input;
       state.result = U.evaluate(input);
       renderResult(input, state.result);
       show('s-result');
+      return true;
+    }
+
+    fLine.addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      checkLine(true);
     });
 
-    // șterge eroarea unui câmp când utilizatorul îl corectează
-    fLine.addEventListener('input', clearFieldError);
-    fLine.addEventListener('change', clearFieldError);
+    // La tastare: eroarea dispare când valoarea devine corectă. La ieșirea din câmp: se arată eroarea curentă.
+    function liveCheck(ev, onBlur) {
+      var t = ev.target;
+      if (!t || !t.name || LINE_FIELDS.indexOf(t.name) < 0) return;
+      var name = t.name;
+      var input = readForm(fLine, LINE_FIELDS);
+      var v = U.validate(input);
+      var err = v.errors[name] || '';
+      var box = fLine.querySelector('[data-field="' + name + '"]');
+      var hadErr = !!(box && box.classList.contains('has-error'));
+      if (hadErr && !err) setFieldError(fLine, name, '');
+      else if (onBlur && err && (hadErr || input[name] !== '')) setFieldError(fLine, name, err);
+      renderWarnings(fLine, v.warnings);
+      if ($('form-summary').textContent) updateSummary(fLine);
+    }
+    fLine.addEventListener('input', function (ev) { liveCheck(ev, false); });
+    fLine.addEventListener('change', function (ev) { liveCheck(ev, false); });
+    fLine.addEventListener('focusout', function (ev) { liveCheck(ev, true); });
+
+    /* exemple pentru juriu */
+    var EX_OK = { industrie: 'creme', greutate: '13', galetiPalet: '44', debit: '6', schimburi: '3', ore: '8', operatori: '2', maner: 'da', separator: 'da', spatiu: 'da', gripper: '4' };
+    var EX_BAD = { industrie: 'creme', greutate: 'abc', galetiPalet: '-44', debit: '0', schimburi: '5', ore: '8', operatori: '', maner: 'da', separator: 'da', spatiu: '', gripper: '4' };
+
+    function fillLine(data) {
+      fLine.reset();
+      renderErrors(fLine, LINE_FIELDS, {});
+      renderWarnings(fLine, {});
+      $('form-summary').textContent = '';
+      LINE_FIELDS.forEach(function (name) {
+        var val = data[name] === undefined ? '' : data[name];
+        var radios = fLine.querySelectorAll('input[type="radio"][name="' + name + '"]');
+        if (radios.length) {
+          radios.forEach(function (r) { r.checked = r.value === val; });
+        } else if (fLine.elements[name]) {
+          fLine.elements[name].value = val;
+        }
+      });
+    }
+
+    $('b-ex-ok').addEventListener('click', function () { fillLine(EX_OK); checkLine(false); });
+    // fără focus pe câmp: pe telefon tastatura ar acoperi mesajele
+    $('b-ex-bad').addEventListener('click', function () { fillLine(EX_BAD); checkLine(false); });
+
     $('f-request').addEventListener('input', clearFieldError);
     $('f-request').addEventListener('change', clearFieldError);
 

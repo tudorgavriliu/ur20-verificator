@@ -187,6 +187,39 @@ input[type="text"]:focus, select:focus {
 .err:empty { display: none; }
 .has-error input[type="text"], .has-error select, .has-error .seg span { border-color: var(--bad); }
 .form-summary { font-weight: 600; margin: 0 0 12px; }
+/* avertisment: nu blochează evaluarea */
+.warn-msg {
+  color: var(--warn);
+  background: var(--warn-bg);
+  border-left: 3px solid var(--warn);
+  border-radius: 4px;
+  font-size: 0.9rem;
+  margin: 6px 0 0;
+  padding: 6px 10px;
+}
+.warn-msg:empty { display: none; }
+.has-warning input[type="text"] { border-color: var(--warn); }
+
+/* exemple pentru juriu */
+.examples {
+  margin: 0 0 18px;
+  padding: 0 0 16px;
+  border-bottom: 1px solid var(--line);
+}
+.examples-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.btn-example {
+  margin: 0;
+  min-height: 48px;
+  padding: 8px 10px;
+  font-size: 0.92rem;
+  line-height: 1.25;
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.btn-example:hover { background: #d6e6f7; }
+.examples-hint { margin: 8px 0 0; font-size: 0.85rem; color: var(--muted); }
+.result-warning { margin-top: 12px; }
 
 /* ipoteze */
 details.assumptions, details.sources {

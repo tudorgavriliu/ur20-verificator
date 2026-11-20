@@ -122,24 +122,83 @@
     return !!(ind && ind.alimentara);
   }
 
-  /* ---------- validare (de extins la pasul B4) ---------- */
+  /* ---------- validare ---------- */
 
-  // Întoarce { ok, errors: { camp: mesaj } }.
+  // Reguli pentru câmpurile numerice. Limitele max sunt de plauzibilitate, nu tehnice.
+  //   zeroOk: 0 este acceptat; intreg: doar numere întregi; min/max + mesaj de interval.
+  var REGULI = {
+    greutate: { max: 50, mesajMax: 'Greutatea pare prea mare: maximum 50 kg pe găleată.' },
+    galetiPalet: { intreg: true, exempluIntreg: '44', max: 300, mesajMax: 'Prea multe găleți pe palet: maximum 300.' },
+    debit: { max: 60, mesajMax: 'Debitul pare prea mare: maximum 60 găleți/min.' },
+    schimburi: { intreg: true, exempluIntreg: '3', min: 1, max: 3, mesajMin: 'Schimburi pe zi: între 1 și 3.', mesajMax: 'Schimburi pe zi: între 1 și 3.' },
+    ore: { min: 1, max: 12, mesajMin: 'Ore pe schimb: între 1 și 12.', mesajMax: 'Ore pe schimb: între 1 și 12.' },
+    operatori: { intreg: true, exempluIntreg: '2', max: 20, mesajMax: 'Maximum 20 de operatori pe schimb.' },
+    gripper: { zeroOk: true, max: 15, mesajMax: 'Greutatea gripperului: între 0 și 15 kg.' }
+  };
+
+  var MSG = {
+    gol: 'Câmp obligatoriu.',
+    golAlegere: 'Câmp obligatoriu: alegeți o variantă.',
+    text: 'Introduceți un număr (ex. 13 sau 7,4).',
+    negativ: 'Valoarea nu poate fi negativă.',
+    zero: 'Valoarea trebuie să fie mai mare decât 0.'
+  };
+
+  // Verifică un singur câmp numeric. Întoarce mesajul de eroare sau '' dacă e în regulă.
+  function checkNumber(key, v) {
+    var r = REGULI[key] || {};
+    if (isEmpty(v)) return MSG.gol;
+    var n = parseNum(v);
+    if (isNaN(n)) return MSG.text;
+    if (n < 0) return MSG.negativ;
+    if (n === 0 && !r.zeroOk) return MSG.zero;
+    if (r.intreg && Math.floor(n) !== n) return 'Introduceți un număr întreg (ex. ' + r.exempluIntreg + ').';
+    if (r.min !== undefined && n < r.min) return r.mesajMin;
+    if (r.max !== undefined && n > r.max) return r.mesajMax;
+    return '';
+  }
+
+  // Întoarce { ok, errors: { camp: mesaj }, warnings: { camp: mesaj } }.
+  //   errors   = blochează evaluarea (date lipsă sau greșite);
+  //   warnings = NU blochează: datele sunt corecte, dar rezultatul va fi
+  //              „În afara aplicației de referință” (ex. sarcină peste capacitate).
   function validate(input) {
     input = input || {};
     var errors = {};
+    var warnings = {};
     CONFIG.campuriTehnice.forEach(function (c) {
       var v = input[c.key];
-      if (isEmpty(v)) {
-        errors[c.key] = c.tip === 'alegere' ? 'Alege o variantă.' : 'Completează câmpul.';
-      } else if (c.tip === 'numar' && isNaN(parseNum(v))) {
-        errors[c.key] = 'Scrie un număr (ex. 7,4).';
+      if (c.tip === 'alegere') {
+        if (isEmpty(v)) errors[c.key] = MSG.golAlegere;
+      } else {
+        var m = checkNumber(c.key, v);
+        if (m) errors[c.key] = m;
       }
     });
-    if (!isEmpty(input.gripper) && isNaN(parseNum(input.gripper))) {
-      errors.gripper = 'Scrie un număr (ex. 4).';
+    // gripper: opțional (gol = ipoteza implicită), dar dacă e completat trebuie să fie valid
+    if (!isEmpty(input.gripper)) {
+      var mg = checkNumber('gripper', input.gripper);
+      if (mg) errors.gripper = mg;
     }
-    return { ok: Object.keys(errors).length === 0, errors: errors };
+
+    // avertisment de capacitate: doar când greutatea și gripperul sunt valide
+    if (!errors.greutate && !errors.gripper && !isEmpty(input.greutate)) {
+      var g = parseNum(input.greutate);
+      var gr = isEmpty(input.gripper) ? CONFIG.gripperKgImplicit : parseNum(input.gripper);
+      var sarcina = g + gr;
+      if (sarcina > CONFIG.capacitateKg) {
+        warnings.greutate = 'Găleata + gripperul (' + fmt(sarcina, 2) + ' kg) depășesc capacitatea UR20 de ' +
+          CONFIG.capacitateKg + ' kg.';
+      }
+    }
+
+    return { ok: Object.keys(errors).length === 0, errors: errors, warnings: warnings };
+  }
+
+  // Validează un singur câmp (pentru verificarea la ieșirea din câmp).
+  function validateField(key, input) {
+    var v = validate(input);
+    return { error: v.errors[key] || '', warning: v.warnings[key] || '' };
   }
 
   /* ---------- evaluare ---------- */
@@ -297,6 +356,7 @@
   root.UR20 = {
     evaluate: evaluate,
     validate: validate,
+    validateField: validateField,
     routeLocation: routeLocation,
     isRelevantRequest: isRelevantRequest,
     CONFIG: CONFIG,

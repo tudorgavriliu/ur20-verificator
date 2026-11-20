@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Pre-evaluare în 2 minute: se potrivește linia ta de găleți cu aplicația de referință PURATOS (2 celule UR20, Tech-Con)?">
   <title>Verificator UR20</title>
   <link rel="stylesheet" href="style.css">
 </head>
@@ -12,6 +13,194 @@
     <p class="subtitle">Pre-evaluare în 2 minute pentru paletizarea găleților de 5–15 kg cu o celulă UR20.</p>
     <p class="demo-note" role="note">Demo: nu introduceți date reale</p>
   </header>
-  <main id="app"></main>
+
+  <main id="app">
+
+    <!-- 1. FORMULAR -->
+    <section id="s-form" class="step" aria-labelledby="t-form" tabindex="-1">
+      <p class="step-kicker">Pasul 1 din 3</p>
+      <h2 id="t-form">Datele liniei tale</h2>
+      <p class="lead">Comparăm linia ta cu aplicația de referință PURATOS: 2 celule de paletizare UR20 livrate de Tech-Con.</p>
+
+      <form id="f-line" novalidate>
+        <div class="field" data-field="industrie">
+          <label for="industrie">1. Tip produs / industrie</label>
+          <select id="industrie" name="industrie" aria-describedby="e-industrie">
+            <option value="">Alege…</option>
+            <optgroup label="Industrie alimentară">
+              <option value="creme">Creme și umpluturi</option>
+              <option value="gemuri">Gemuri și glazuri</option>
+              <option value="sosuri">Sosuri</option>
+              <option value="lactate">Lactate HoReCa</option>
+              <option value="panificatie">Ingrediente pentru panificație</option>
+              <option value="alt_aliment">Alt aliment</option>
+            </optgroup>
+            <optgroup label="Altele">
+              <option value="alta_industrie">Altă industrie (ex. vopsele)</option>
+            </optgroup>
+          </select>
+          <p class="err" id="e-industrie" aria-live="polite"></p>
+        </div>
+
+        <div class="field" data-field="greutate">
+          <label for="greutate">2. Greutate găleată plină</label>
+          <div class="unit-wrap">
+            <input id="greutate" name="greutate" type="text" inputmode="decimal" autocomplete="off" placeholder="ex. 13" aria-describedby="e-greutate">
+            <span class="unit" aria-hidden="true">kg</span>
+          </div>
+          <p class="err" id="e-greutate" aria-live="polite"></p>
+        </div>
+
+        <div class="field" data-field="galetiPalet">
+          <label for="galetiPalet">3. Găleți pe palet</label>
+          <div class="unit-wrap">
+            <input id="galetiPalet" name="galetiPalet" type="text" inputmode="decimal" autocomplete="off" placeholder="ex. 44" aria-describedby="e-galetiPalet">
+            <span class="unit" aria-hidden="true">buc.</span>
+          </div>
+          <p class="err" id="e-galetiPalet" aria-live="polite"></p>
+        </div>
+
+        <div class="field" data-field="debit">
+          <label for="debit">4. Debitul liniei</label>
+          <div class="unit-wrap">
+            <input id="debit" name="debit" type="text" inputmode="decimal" autocomplete="off" placeholder="ex. 6" aria-describedby="e-debit">
+            <span class="unit" aria-hidden="true">găleți/min</span>
+          </div>
+          <p class="err" id="e-debit" aria-live="polite"></p>
+        </div>
+
+        <fieldset class="field group">
+          <legend>5. Program de lucru</legend>
+          <div class="row2">
+            <div data-field="schimburi">
+              <label for="schimburi" class="sub">Schimburi pe zi</label>
+              <input id="schimburi" name="schimburi" type="text" inputmode="decimal" autocomplete="off" placeholder="ex. 3" aria-describedby="e-schimburi">
+              <p class="err" id="e-schimburi" aria-live="polite"></p>
+            </div>
+            <div data-field="ore">
+              <label for="ore" class="sub">Ore pe schimb</label>
+              <input id="ore" name="ore" type="text" inputmode="decimal" autocomplete="off" placeholder="ex. 8" aria-describedby="e-ore">
+              <p class="err" id="e-ore" aria-live="polite"></p>
+            </div>
+          </div>
+        </fieldset>
+
+        <div class="field" data-field="operatori">
+          <label for="operatori">6. Operatori la paletizare, pe schimb</label>
+          <div class="unit-wrap">
+            <input id="operatori" name="operatori" type="text" inputmode="decimal" autocomplete="off" placeholder="ex. 2" aria-describedby="e-operatori">
+            <span class="unit" aria-hidden="true">pers.</span>
+          </div>
+          <p class="err" id="e-operatori" aria-live="polite"></p>
+        </div>
+
+        <fieldset class="field group">
+          <legend>7. Ambalaj</legend>
+          <div class="row2">
+            <div data-field="maner" role="radiogroup" aria-labelledby="l-maner" aria-describedby="e-maner">
+              <p class="sub" id="l-maner">Găleata are mâner?</p>
+              <div class="seg">
+                <label><input type="radio" name="maner" value="da"><span>Da</span></label>
+                <label><input type="radio" name="maner" value="nu"><span>Nu</span></label>
+              </div>
+              <p class="err" id="e-maner" aria-live="polite"></p>
+            </div>
+            <div data-field="separator" role="radiogroup" aria-labelledby="l-separator" aria-describedby="e-separator">
+              <p class="sub" id="l-separator">Separator între straturi?</p>
+              <div class="seg">
+                <label><input type="radio" name="separator" value="da"><span>Da</span></label>
+                <label><input type="radio" name="separator" value="nu"><span>Nu</span></label>
+              </div>
+              <p class="err" id="e-separator" aria-live="polite"></p>
+            </div>
+          </div>
+        </fieldset>
+
+        <div class="field" data-field="spatiu" role="radiogroup" aria-labelledby="l-spatiu" aria-describedby="e-spatiu">
+          <p class="label" id="l-spatiu">8. Ai spațiu la capătul liniei pentru celulă?</p>
+          <div class="seg seg3">
+            <label><input type="radio" name="spatiu" value="da"><span>Da</span></label>
+            <label><input type="radio" name="spatiu" value="nu"><span>Nu</span></label>
+            <label><input type="radio" name="spatiu" value="nu_stiu"><span>Nu știu</span></label>
+          </div>
+          <p class="err" id="e-spatiu" aria-live="polite"></p>
+        </div>
+
+        <details class="assumptions">
+          <summary>Ipoteze de calcul</summary>
+          <p class="fact">Capacitate UR20: 20 kg (fișa Universal Robots)</p>
+          <div class="field" data-field="gripper">
+            <label for="gripper">Greutate gripper (ipoteză, o poți schimba)</label>
+            <div class="unit-wrap">
+              <input id="gripper" name="gripper" type="text" inputmode="decimal" autocomplete="off" value="4" aria-describedby="e-gripper">
+              <span class="unit" aria-hidden="true">kg</span>
+            </div>
+            <p class="err" id="e-gripper" aria-live="polite"></p>
+          </div>
+        </details>
+
+        <p class="form-summary err" id="form-summary" role="alert"></p>
+        <button type="submit" class="btn btn-primary">Verifică linia</button>
+      </form>
+    </section>
+
+    <!-- 2. REZULTAT -->
+    <section id="s-result" class="step" aria-labelledby="t-result" tabindex="-1" hidden>
+      <p class="step-kicker">Pasul 2 din 3</p>
+      <h2 id="t-result">Rezultatul pre-evaluării</h2>
+      <div id="result-body" aria-live="polite"></div>
+      <div class="actions">
+        <button type="button" class="btn btn-primary" id="b-request">Solicită evaluarea tehnică</button>
+        <button type="button" class="btn btn-secondary" id="b-edit">Modifică datele</button>
+        <button type="button" class="btn btn-link" data-action="restart">Verifică altă linie</button>
+      </div>
+    </section>
+
+    <!-- 3. CERERE -->
+    <section id="s-request" class="step" aria-labelledby="t-request" tabindex="-1" hidden>
+      <p class="step-kicker">Pasul 3 din 3</p>
+      <h2 id="t-request">Solicită evaluarea tehnică</h2>
+      <p class="demo-note" role="note">Demo: nu introduceți date reale</p>
+      <p class="lead">Datele liniei și rezultatul se atașează automat. Un specialist Tech-Con te contactează pentru evaluarea tehnică.</p>
+      <form id="f-request" novalidate>
+        <div class="field" data-field="firma">
+          <label for="firma">Firmă</label>
+          <input id="firma" name="firma" type="text" autocomplete="off" placeholder="ex. Fabrica Demo SRL" aria-describedby="e-firma">
+          <p class="err" id="e-firma" aria-live="polite"></p>
+        </div>
+        <div class="field" data-field="rol">
+          <label for="rol">Rolul tău</label>
+          <select id="rol" name="rol" aria-describedby="e-rol"><option value="">Alege…</option></select>
+          <p class="err" id="e-rol" aria-live="polite"></p>
+        </div>
+        <div class="field" data-field="judet">
+          <label for="judet">Județul fabricii</label>
+          <select id="judet" name="judet" aria-describedby="e-judet"><option value="">Alege…</option></select>
+          <p class="err" id="e-judet" aria-live="polite"></p>
+        </div>
+        <button type="submit" class="btn btn-primary">Trimite cererea</button>
+        <button type="button" class="btn btn-secondary" id="b-back">Înapoi la rezultat</button>
+      </form>
+    </section>
+
+    <!-- 4. CONFIRMARE -->
+    <section id="s-confirm" class="step" aria-labelledby="t-confirm" tabindex="-1" hidden>
+      <h2 id="t-confirm">Cererea a fost înregistrată</h2>
+      <p class="lead">Demo: cererea este salvată doar în acest browser.</p>
+      <div id="confirm-body" aria-live="polite"></div>
+      <div class="actions">
+        <button type="button" class="btn btn-secondary" id="b-print">Tipărește fișa</button>
+        <button type="button" class="btn btn-primary" data-action="restart">Verifică altă linie</button>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <p>Referință: aplicația PURATOS, 2 celule UR20 livrate de Tech-Con. Rezultatele de test nu sunt garanții.</p>
+  </footer>
+
+  <script src="logic.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
